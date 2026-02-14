@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle ESP32 - Monitor de Temperatura</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+
+        .status-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .temperature-section {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 15px;
+        }
+
+        .temperature-value {
+            font-size: 4em;
+            font-weight: bold;
+            color: #333;
+            line-height: 1;
+        }
+
+        .temperature-unit {
+            font-size: 1.5em;
+            color: #666;
+            margin-left: 5px;
+        }
+
+        .temperature-label {
+            font-size: 1.2em;
+            color: #555;
+            margin-top: 10px;
+        }
+
+        .temperature-range {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .temperature-status {
+            margin-top: 10px;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        .temperature-status.cold {
+            background: #c9e4ff;
+            color: #0047ab;
+        }
+
+        .temperature-status.normal {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .temperature-status.warm {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .temperature-status.hot {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .led-section {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .led-indicator {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        .led-indicator.on {
+            background: #ffd700;
+            box-shadow: 0 0 40px #ffd700, 0 0 80px #ffd700;
+        }
+
+        .led-indicator.off {
+            background: #6c757d;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        }
+
+        .led-status-text {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .led-status-text.on {
+            color: #ffc107;
+        }
+
+        .led-status-text.off {
+            color: #6c757d;
+        }
+
+        .control-button {
+            width: 100%;
+            padding: 20px;
+            font-size: 1.2em;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .control-button.turn-on {
+            background: #28a745;
+            color: white;
+        }
+
+        .control-button.turn-on:hover {
+            background: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+        }
+
+        .control-button.turn-off {
+            background: #dc3545;
+            color: white;
+        }
+
+        .control-button.turn-off:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4);
+        }
+
+        .control-button:active {
+            transform: translateY(0);
+        }
+
+        .control-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .info {
+            text-align: center;
+            margin-top: 20px;
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+
+        .connection-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+            color: white;
+            z-index: 1000;
+        }
+
+        .connection-status.connected {
+            background: #28a745;
+        }
+
+        .connection-status.disconnected {
+            background: #dc3545;
+        }
+
+        .connection-status.loading {
+            background: #ffc107;
+        }
+
+        .debug-log {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            font-family: monospace;
+            font-size: 0.8em;
+            max-height: 150px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            border: 1px solid #dee2e6;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .stat-box {
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .stat-label {
+            font-size: 0.8em;
+            color: #666;
+            text-transform: uppercase;
+        }
+
+        .stat-value {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="connection-status loading" id="connectionStatus">Conectando...</div>
+
+    <div class="container">
+        <h1>🌡️ Monitor ESP32</h1>
+        
+        <!-- Seção de Temperatura -->
+        <div class="temperature-section">
+            <div class="temperature-value" id="temperature">
+                --
+                <span class="temperature-unit">°C</span>
+            </div>
+            <div class="temperature-label" id="temperatureStatus">Aguardando leitura...</div>
+            
+            <div class="temperature-range">
+                <span>❄️ Mín: <span id="minTemp">--</span>°C</span>
+                <span>🔥 Máx: <span id="maxTemp">--</span>°C</span>
+            </div>
+        </div>
+
+        <!-- Seção do LED -->
+        <div class="status-card">
+            <div class="led-section">
+                <div class="led-indicator off" id="ledIndicator"></div>
+                <div class="led-status-text off" id="ledStatusText">Carregando...</div>
+            </div>
+
+            <button class="control-button" id="toggleButton" onclick="toggleLED()" disabled>
+                Carregando...
+            </button>
+        </div>
+
+        <!-- Informações adicionais -->
+        <div class="info">
+            <div>🔄 Atualização automática a cada 2 segundos</div>
+            <div id="lastUpdate">Aguardando dados...</div>
+            <div id="recordCount"></div>
+        </div>
+
+        <!-- Log de depuração -->
+        <div class="debug-log" id="debugLog">Iniciando monitor de temperatura...\n</div>
+    </div>
+
+    <script>
+        // Configuração do Supabase
+        const SUPABASE_URL = 'https://rtabltoadyxlzsrqnxhb.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0YWJsdG9hZHl4bHpzcnFueGhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA5OTQ2MjQsImV4cCI6MjA4NjU3MDYyNH0.5fvPaDpq9k6tEfu6ix81Y8nDtR35CUxbAG6OUc-8la8';
+
+        // Estado global
+        let currentLedState = false;
+        let temperatureHistory = [];
+        let minTemperature = 100;
+        let maxTemperature = -100;
+
+        // Elementos DOM
+        const elements = {
+            ledIndicator: document.getElementById('ledIndicator'),
+            ledStatusText: document.getElementById('ledStatusText'),
+            toggleButton: document.getElementById('toggleButton'),
+            lastUpdate: document.getElementById('lastUpdate'),
+            connectionStatus: document.getElementById('connectionStatus'),
+            debugLog: document.getElementById('debugLog'),
+            temperature: document.getElementById('temperature'),
+            temperatureStatus: document.getElementById('temperatureStatus'),
+            minTemp: document.getElementById('minTemp'),
+            maxTemp: document.getElementById('maxTemp'),
+            recordCount: document.getElementById('recordCount')
+        };
+
+        // Função de log
+        function addLog(message) {
+            const time = new Date().toLocaleTimeString('pt-BR');
+            elements.debugLog.textContent += `[${time}] ${message}\n`;
+            elements.debugLog.scrollTop = elements.debugLog.scrollHeight;
+            console.log(`[LOG] ${message}`);
+        }
+
+        // Função para determinar status da temperatura
+        function getTemperatureStatus(temp) {
+            if (temp < 18) return { text: '❄️ Frio', class: 'cold' };
+            if (temp < 26) return { text: '🌱 Agradável', class: 'normal' };
+            if (temp < 35) return { text: '☀️ Quente', class: 'warm' };
+            return { text: '🔥 Muito Quente', class: 'hot' };
+        }
+
+        // Atualizar UI com temperatura
+        function updateTemperatureUI(temp) {
+            if (temp !== null && !isNaN(temp)) {
+                // Atualiza valor da temperatura
+                elements.temperature.innerHTML = `${temp.toFixed(1)}<span class="temperature-unit">°C</span>`;
+                
+                // Atualiza status
+                const status = getTemperatureStatus(temp);
+                elements.temperatureStatus.textContent = status.text;
+                elements.temperatureStatus.className = `temperature-status ${status.class}`;
+                
+                // Atualiza estatísticas
+                if (temp < minTemperature) {
+                    minTemperature = temp;
+                    elements.minTemp.textContent = minTemperature.toFixed(1);
+                }
+                if (temp > maxTemperature) {
+                    maxTemperature = temp;
+                    elements.maxTemp.textContent = maxTemperature.toFixed(1);
+                }
+            }
+        }
+
+        // Atualizar UI do LED
+        function updateLEDUI(ledState) {
+            addLog(`Atualizando LED: ${ledState ? 'LIGADO' : 'DESLIGADO'}`);
+            currentLedState = ledState;
+            elements.toggleButton.disabled = false;
+
+            if (ledState) {
+                elements.ledIndicator.className = 'led-indicator on';
+                elements.ledStatusText.className = 'led-status-text on';
+                elements.ledStatusText.textContent = 'LED LIGADO';
+                elements.toggleButton.className = 'control-button turn-off';
+                elements.toggleButton.textContent = '🔴 Desligar LED';
+            } else {
+                elements.ledIndicator.className = 'led-indicator off';
+                elements.ledStatusText.className = 'led-status-text off';
+                elements.ledStatusText.textContent = 'LED DESLIGADO';
+                elements.toggleButton.className = 'control-button turn-on';
+                elements.toggleButton.textContent = '🟢 Ligar LED';
+            }
+        }
+
+        // Buscar dados do Supabase
+        async function fetchSensorData() {
+            addLog('Buscando dados do sensor...');
+
+            try {
+                // Busca o último registro
+                const response = await fetch(
+                    `${SUPABASE_URL}/rest/v1/sensor_data?select=*&order=id.desc&limit=10`,
+                    {
+                        headers: {
+                            'apikey': SUPABASE_KEY,
+                            'Authorization': `Bearer ${SUPABASE_KEY}`
+                        }
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+                addLog(`Recebidos ${data.length} registros`);
+
+                if (data && data.length > 0) {
+                    // Último registro
+                    const latest = data[0];
+                    
+                    // Atualiza temperatura se disponível
+                    if (latest.temperature !== null) {
+                        updateTemperatureUI(latest.temperature);
+                    }
+                    
+                    // Atualiza LED
+                    updateLEDUI(latest.led_state);
+                    
+                    // Atualiza contador
+                    elements.recordCount.textContent = `📊 Total de registros: ${data.length}+`;
+                    
+                    // Atualiza status da conexão
+                    elements.connectionStatus.className = 'connection-status connected';
+                    elements.connectionStatus.textContent = '✓ Conectado';
+                    
+                } else {
+                    addLog('⚠ Nenhum dado encontrado');
+                    elements.connectionStatus.className = 'connection-status disconnected';
+                    elements.connectionStatus.textContent = '⚠ Sem dados';
+                }
+
+                elements.lastUpdate.textContent = 'Atualizado: ' + new Date().toLocaleTimeString('pt-BR');
+
+            } catch (error) {
+                addLog(`❌ ERRO: ${error.message}`);
+                elements.connectionStatus.className = 'connection-status disconnected';
+                elements.connectionStatus.textContent = '❌ Erro';
+            }
+        }
+
+        // Enviar comando para o LED
+        async function toggleLED() {
+            const newState = !currentLedState;
+            addLog(`Enviando comando: ${newState ? 'LIGAR' : 'DESLIGAR'} LED`);
+
+            try {
+                const response = await fetch(
+                    `${SUPABASE_URL}/rest/v1/sensor_data`,
+                    {
+                        method: 'POST',
+                        headers: {
+                            'apikey': SUPABASE_KEY,
+                            'Authorization': `Bearer ${SUPABASE_KEY}`,
+                            'Content-Type': 'application/json',
+                            'Prefer': 'return=minimal'
+                        },
+                        body: JSON.stringify({
+                            temperature: 0, // O ESP32 enviará a temperatura real depois
+                            humidity: 0,
+                            button_state: true,
+                            led_state: newState
+                        })
+                    }
+                );
+
+                if (response.ok) {
+                    addLog('✓ Comando enviado com sucesso!');
+                    updateLEDUI(newState);
+                } else {
+                    addLog(`❌ Falha ao enviar comando: ${response.status}`);
+                }
+
+            } catch (error) {
+                addLog(`❌ ERRO ao enviar: ${error.message}`);
+            }
+        }
+
+        // Função para buscar estatísticas (mínima e máxima histórica)
+        async function fetchStatistics() {
+            try {
+                const response = await fetch(
+                    `${SUPABASE_URL}/rest/v1/sensor_data?select=temperature&order=id.desc`,
+                    {
+                        headers: {
+                            'apikey': SUPABASE_KEY,
+                            'Authorization': `Bearer ${SUPABASE_KEY}`
+                        }
+                    }
+                );
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data && data.length > 0) {
+                        const temps = data
+                            .map(d => d.temperature)
+                            .filter(t => t !== null && !isNaN(t));
+                        
+                        if (temps.length > 0) {
+                            minTemperature = Math.min(...temps);
+                            maxTemperature = Math.max(...temps);
+                            elements.minTemp.textContent = minTemperature.toFixed(1);
+                            elements.maxTemp.textContent = maxTemperature.toFixed(1);
+                            addLog(`Estatísticas: Mín ${minTemperature.toFixed(1)}°C, Máx ${maxTemperature.toFixed(1)}°C`);
+                        }
+                    }
+                }
+            } catch (error) {
+                addLog(`Erro ao buscar estatísticas: ${error.message}`);
+            }
+        }
+
+        // Inicialização
+        async function init() {
+            addLog('🚀 Iniciando monitor de temperatura...');
+            addLog(`URL Supabase: ${SUPABASE_URL}`);
+            
+            // Busca estatísticas iniciais
+            await fetchStatistics();
+            
+            // Busca dados iniciais
+            await fetchSensorData();
+            
+            // Configura atualização periódica
+            setInterval(fetchSensorData, 2000);
+            
+            addLog('✅ Sistema pronto - atualizando a cada 2 segundos');
+        }
+
+        // Iniciar quando a página carregar
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
