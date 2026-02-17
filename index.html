@@ -37,54 +37,36 @@
             font-size: 2em;
         }
 
-        .status-card {
-            background: #f8f9fa;
-            border-radius: 15px;
-            padding: 30px;
-            margin-bottom: 30px;
-        }
-
         .temperature-section {
             text-align: center;
             margin-bottom: 30px;
-            padding: 20px;
+            padding: 25px;
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
 
         .temperature-value {
-            font-size: 4em;
+            font-size: 4.5em;
             font-weight: bold;
-            color: #333;
+            color: #2c3e50;
             line-height: 1;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
         }
 
         .temperature-unit {
             font-size: 1.5em;
-            color: #666;
+            color: #34495e;
             margin-left: 5px;
-        }
-
-        .temperature-label {
-            font-size: 1.2em;
-            color: #555;
-            margin-top: 10px;
-        }
-
-        .temperature-range {
-            display: flex;
-            justify-content: space-around;
-            margin-top: 15px;
-            font-size: 0.9em;
-            color: #666;
         }
 
         .temperature-status {
             margin-top: 10px;
-            padding: 5px 15px;
-            border-radius: 20px;
+            padding: 8px 20px;
+            border-radius: 25px;
             font-weight: bold;
             display: inline-block;
+            font-size: 1.1em;
         }
 
         .temperature-status.cold {
@@ -107,9 +89,49 @@
             color: #721c24;
         }
 
-        .led-section {
-            text-align: center;
+        .stats-container {
+            display: flex;
+            justify-content: space-around;
             margin-top: 20px;
+            padding-top: 15px;
+            border-top: 2px solid rgba(255,255,255,0.5);
+        }
+
+        .stat-item {
+            text-align: center;
+            flex: 1;
+        }
+
+        .stat-label {
+            font-size: 0.85em;
+            color: #2c3e50;
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-top: 5px;
+        }
+
+        .stat-value.min {
+            color: #3498db;
+        }
+
+        .stat-value.max {
+            color: #e74c3c;
+        }
+
+        .led-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         }
 
         .led-indicator {
@@ -187,15 +209,38 @@
         .control-button:disabled {
             background: #ccc;
             cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
         }
 
-        .info {
-            text-align: center;
+        .info-panel {
             margin-top: 20px;
-            color: #6c757d;
+            padding: 15px;
+            background: #e9ecef;
+            border-radius: 10px;
             font-size: 0.9em;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .info-label {
+            color: #495057;
+            font-weight: 500;
+        }
+
+        .info-value {
+            color: #212529;
+            font-weight: bold;
         }
 
         .connection-status {
@@ -208,6 +253,7 @@
             font-weight: bold;
             color: white;
             z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
         }
 
         .connection-status.connected {
@@ -227,39 +273,12 @@
             padding: 15px;
             background: #f8f9fa;
             border-radius: 10px;
-            font-family: monospace;
+            font-family: 'Courier New', monospace;
             font-size: 0.8em;
             max-height: 150px;
             overflow-y: auto;
             white-space: pre-wrap;
             border: 1px solid #dee2e6;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        .stat-box {
-            background: white;
-            padding: 10px;
-            border-radius: 8px;
-            text-align: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .stat-label {
-            font-size: 0.8em;
-            color: #666;
-            text-transform: uppercase;
-        }
-
-        .stat-value {
-            font-size: 1.2em;
-            font-weight: bold;
-            color: #333;
         }
     </style>
 </head>
@@ -275,35 +294,57 @@
                 --
                 <span class="temperature-unit">°C</span>
             </div>
-            <div class="temperature-label" id="temperatureStatus">Aguardando leitura...</div>
             
-            <div class="temperature-range">
-                <span>❄️ Mín: <span id="minTemp">--</span>°C</span>
-                <span>🔥 Máx: <span id="maxTemp">--</span>°C</span>
+            <div class="temperature-status" id="temperatureStatus">Aguardando...</div>
+            
+            <div class="stats-container">
+                <div class="stat-item">
+                    <div class="stat-label">Mínima</div>
+                    <div class="stat-value min" id="minTemp">--</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Atual</div>
+                    <div class="stat-value" id="currentTempStat">--</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Máxima</div>
+                    <div class="stat-value max" id="maxTemp">--</div>
+                </div>
             </div>
         </div>
 
         <!-- Seção do LED -->
-        <div class="status-card">
-            <div class="led-section">
-                <div class="led-indicator off" id="ledIndicator"></div>
-                <div class="led-status-text off" id="ledStatusText">Carregando...</div>
-            </div>
+        <div class="led-section">
+            <div class="led-indicator off" id="ledIndicator"></div>
+            <div class="led-status-text off" id="ledStatusText">Carregando...</div>
 
             <button class="control-button" id="toggleButton" onclick="toggleLED()" disabled>
                 Carregando...
             </button>
         </div>
 
-        <!-- Informações adicionais -->
-        <div class="info">
-            <div>🔄 Atualização automática a cada 2 segundos</div>
-            <div id="lastUpdate">Aguardando dados...</div>
-            <div id="recordCount"></div>
+        <!-- Painel de Informações -->
+        <div class="info-panel">
+            <div class="info-row">
+                <span class="info-label">🔄 Atualização:</span>
+                <span class="info-value">a cada 2 segundos</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">🕐 Última leitura:</span>
+                <span class="info-value" id="lastUpdate">--</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">📊 Registros no banco:</span>
+                <span class="info-value" id="recordCount">--</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">📋 Último ID:</span>
+                <span class="info-value" id="lastId">--</span>
+            </div>
         </div>
 
         <!-- Log de depuração -->
-        <div class="debug-log" id="debugLog">Iniciando monitor de temperatura...\n</div>
+        <div class="debug-log" id="debugLog">Iniciando monitor...\n</div>
     </div>
 
     <script>
@@ -313,9 +354,10 @@
 
         // Estado global
         let currentLedState = false;
-        let temperatureHistory = [];
-        let minTemperature = 100;
-        let maxTemperature = -100;
+        let currentTemperature = null;
+        let minTemperature = Infinity;
+        let maxTemperature = -Infinity;
+        let temperatureReadings = []; // Array para armazenar leituras válidas
 
         // Elementos DOM
         const elements = {
@@ -329,7 +371,9 @@
             temperatureStatus: document.getElementById('temperatureStatus'),
             minTemp: document.getElementById('minTemp'),
             maxTemp: document.getElementById('maxTemp'),
-            recordCount: document.getElementById('recordCount')
+            currentTempStat: document.getElementById('currentTempStat'),
+            recordCount: document.getElementById('recordCount'),
+            lastId: document.getElementById('lastId')
         };
 
         // Função de log
@@ -342,38 +386,59 @@
 
         // Função para determinar status da temperatura
         function getTemperatureStatus(temp) {
+            if (temp === null || isNaN(temp)) return { text: '⏳ Aguardando...', class: '' };
             if (temp < 18) return { text: '❄️ Frio', class: 'cold' };
             if (temp < 26) return { text: '🌱 Agradável', class: 'normal' };
             if (temp < 35) return { text: '☀️ Quente', class: 'warm' };
             return { text: '🔥 Muito Quente', class: 'hot' };
         }
 
+        // Função para validar temperatura (ignorar 0 e valores inválidos)
+        function isValidTemperature(temp) {
+            // Ignora null, undefined, 0, e valores fora da faixa plausível (-10 a 60°C)
+            return temp !== null && 
+                   temp !== undefined && 
+                   !isNaN(temp) && 
+                   temp > -10 && 
+                   temp < 60 && 
+                   Math.abs(temp) > 0.1; // Ignora valores muito próximos de 0
+        }
+
         // Atualizar UI com temperatura
-        function updateTemperatureUI(temp) {
-            if (temp !== null && !isNaN(temp)) {
+        function updateTemperatureUI() {
+            if (currentTemperature !== null && isValidTemperature(currentTemperature)) {
                 // Atualiza valor da temperatura
-                elements.temperature.innerHTML = `${temp.toFixed(1)}<span class="temperature-unit">°C</span>`;
+                elements.temperature.innerHTML = `${currentTemperature.toFixed(1)}<span class="temperature-unit">°C</span>`;
+                elements.currentTempStat.textContent = `${currentTemperature.toFixed(1)}°C`;
                 
                 // Atualiza status
-                const status = getTemperatureStatus(temp);
+                const status = getTemperatureStatus(currentTemperature);
                 elements.temperatureStatus.textContent = status.text;
                 elements.temperatureStatus.className = `temperature-status ${status.class}`;
                 
-                // Atualiza estatísticas
-                if (temp < minTemperature) {
-                    minTemperature = temp;
-                    elements.minTemp.textContent = minTemperature.toFixed(1);
+                // Atualiza estatísticas (só com valores válidos)
+                if (currentTemperature < minTemperature) {
+                    minTemperature = currentTemperature;
                 }
-                if (temp > maxTemperature) {
-                    maxTemperature = temp;
-                    elements.maxTemp.textContent = maxTemperature.toFixed(1);
+                if (currentTemperature > maxTemperature) {
+                    maxTemperature = currentTemperature;
                 }
+                
+                // Mostra estatísticas
+                elements.minTemp.textContent = minTemperature !== Infinity ? `${minTemperature.toFixed(1)}°C` : '--';
+                elements.maxTemp.textContent = maxTemperature !== -Infinity ? `${maxTemperature.toFixed(1)}°C` : '--';
+            } else {
+                // Se não tem temperatura válida, mostra placeholder
+                elements.temperature.innerHTML = `--<span class="temperature-unit">°C</span>`;
+                elements.currentTempStat.textContent = '--';
+                elements.temperatureStatus.textContent = 'Aguardando leitura válida...';
+                elements.temperatureStatus.className = 'temperature-status';
             }
         }
 
         // Atualizar UI do LED
         function updateLEDUI(ledState) {
-            addLog(`Atualizando LED: ${ledState ? 'LIGADO' : 'DESLIGADO'}`);
+            addLog(`LED: ${ledState ? 'LIGADO' : 'DESLIGADO'}`);
             currentLedState = ledState;
             elements.toggleButton.disabled = false;
 
@@ -392,14 +457,14 @@
             }
         }
 
-        // Buscar dados do Supabase
+        // Buscar últimos dados do Supabase
         async function fetchSensorData() {
-            addLog('Buscando dados do sensor...');
+            addLog('Buscando dados...');
 
             try {
-                // Busca o último registro
+                // Busca os últimos 50 registros para ter um histórico bom
                 const response = await fetch(
-                    `${SUPABASE_URL}/rest/v1/sensor_data?select=*&order=id.desc&limit=10`,
+                    `${SUPABASE_URL}/rest/v1/sensor_data?select=*&order=id.desc&limit=50`,
                     {
                         headers: {
                             'apikey': SUPABASE_KEY,
@@ -416,19 +481,43 @@
                 addLog(`Recebidos ${data.length} registros`);
 
                 if (data && data.length > 0) {
-                    // Último registro
-                    const latest = data[0];
+                    // Primeiro, encontra a temperatura válida mais recente
+                    let latestValidTemp = null;
+                    let latestLedState = data[0].led_state; // Pega o LED do último registro
                     
-                    // Atualiza temperatura se disponível
-                    if (latest.temperature !== null) {
-                        updateTemperatureUI(latest.temperature);
+                    // Procura pela temperatura válida mais recente
+                    for (let record of data) {
+                        if (isValidTemperature(record.temperature)) {
+                            latestValidTemp = record.temperature;
+                            break;
+                        }
+                    }
+                    
+                    // Se encontrou temperatura válida, atualiza
+                    if (latestValidTemp !== null) {
+                        currentTemperature = latestValidTemp;
+                        addLog(`Temperatura válida encontrada: ${currentTemperature.toFixed(1)}°C`);
+                    } else {
+                        addLog('⚠ Nenhuma temperatura válida nos últimos registros');
                     }
                     
                     // Atualiza LED
-                    updateLEDUI(latest.led_state);
+                    updateLEDUI(latestLedState);
                     
-                    // Atualiza contador
-                    elements.recordCount.textContent = `📊 Total de registros: ${data.length}+`;
+                    // Calcula estatísticas apenas com temperaturas válidas
+                    const validTemps = data
+                        .map(d => d.temperature)
+                        .filter(isValidTemperature);
+                    
+                    if (validTemps.length > 0) {
+                        minTemperature = Math.min(...validTemps);
+                        maxTemperature = Math.max(...validTemps);
+                        addLog(`Estatísticas: Mín ${minTemperature.toFixed(1)}°C, Máx ${maxTemperature.toFixed(1)}°C (${validTemps.length} leituras válidas)`);
+                    }
+                    
+                    // Atualiza contadores
+                    elements.recordCount.textContent = data.length;
+                    elements.lastId.textContent = data[0].id;
                     
                     // Atualiza status da conexão
                     elements.connectionStatus.className = 'connection-status connected';
@@ -440,7 +529,10 @@
                     elements.connectionStatus.textContent = '⚠ Sem dados';
                 }
 
-                elements.lastUpdate.textContent = 'Atualizado: ' + new Date().toLocaleTimeString('pt-BR');
+                // Atualiza UI da temperatura
+                updateTemperatureUI();
+                
+                elements.lastUpdate.textContent = new Date().toLocaleTimeString('pt-BR');
 
             } catch (error) {
                 addLog(`❌ ERRO: ${error.message}`);
@@ -449,12 +541,13 @@
             }
         }
 
-        // Enviar comando para o LED
+        // Enviar comando para o LED (sem enviar temperatura)
         async function toggleLED() {
             const newState = !currentLedState;
             addLog(`Enviando comando: ${newState ? 'LIGAR' : 'DESLIGAR'} LED`);
 
             try {
+                // IMPORTANTE: Não enviamos temperatura aqui!
                 const response = await fetch(
                     `${SUPABASE_URL}/rest/v1/sensor_data`,
                     {
@@ -466,10 +559,10 @@
                             'Prefer': 'return=minimal'
                         },
                         body: JSON.stringify({
-                            temperature: 0, // O ESP32 enviará a temperatura real depois
-                            humidity: 0,
-                            button_state: true,
-                            led_state: newState
+                            // Não incluímos temperature - deixa o ESP32 enviar
+                            led_state: newState,
+                            button_state: true
+                            // temperature NÃO é enviado para não poluir os dados
                         })
                     }
                 );
@@ -477,6 +570,9 @@
                 if (response.ok) {
                     addLog('✓ Comando enviado com sucesso!');
                     updateLEDUI(newState);
+                    
+                    // Aguarda um pouco e busca os dados atualizados
+                    setTimeout(fetchSensorData, 500);
                 } else {
                     addLog(`❌ Falha ao enviar comando: ${response.status}`);
                 }
@@ -486,47 +582,9 @@
             }
         }
 
-        // Função para buscar estatísticas (mínima e máxima histórica)
-        async function fetchStatistics() {
-            try {
-                const response = await fetch(
-                    `${SUPABASE_URL}/rest/v1/sensor_data?select=temperature&order=id.desc`,
-                    {
-                        headers: {
-                            'apikey': SUPABASE_KEY,
-                            'Authorization': `Bearer ${SUPABASE_KEY}`
-                        }
-                    }
-                );
-
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data && data.length > 0) {
-                        const temps = data
-                            .map(d => d.temperature)
-                            .filter(t => t !== null && !isNaN(t));
-                        
-                        if (temps.length > 0) {
-                            minTemperature = Math.min(...temps);
-                            maxTemperature = Math.max(...temps);
-                            elements.minTemp.textContent = minTemperature.toFixed(1);
-                            elements.maxTemp.textContent = maxTemperature.toFixed(1);
-                            addLog(`Estatísticas: Mín ${minTemperature.toFixed(1)}°C, Máx ${maxTemperature.toFixed(1)}°C`);
-                        }
-                    }
-                }
-            } catch (error) {
-                addLog(`Erro ao buscar estatísticas: ${error.message}`);
-            }
-        }
-
         // Inicialização
         async function init() {
             addLog('🚀 Iniciando monitor de temperatura...');
-            addLog(`URL Supabase: ${SUPABASE_URL}`);
-            
-            // Busca estatísticas iniciais
-            await fetchStatistics();
             
             // Busca dados iniciais
             await fetchSensorData();
