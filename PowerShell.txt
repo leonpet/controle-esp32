@@ -1,0 +1,56 @@
+para modificar arquivos:
+
+git add .
+git commit -m "16/02/ 20:08"
+git push
+
+-----------------------------------------------------------
+
+Para excluir o arquivo novo 1.html do repositório Git e do GitHub:
+
+# 1. Exclua o arquivo do Git e do disco
+git rm "novo 1.html"
+
+# 2. Faça o commit da exclusão
+git commit -m "Remove arquivo novo 1.html"
+
+# 3. Envie para o GitHub
+git push
+
+----------------------------------------------------------------
+
+Se você quiser apenas remover do Git mas manter o arquivo localmente:
+
+git rm --cached "novo 1.html"
+git commit -m "Remove novo 1.html do repositório"
+git push
+
+-----------------------------------------------------------------
+
+Para iniciar um novo projeto Git em uma nova pasta:
+
+# 1. Crie a pasta (se ainda não existir)
+mkdir C:\leonel\NovaPasta
+
+# 2. Entre na pasta
+cd C:\leonel\NovaPasta
+
+# 3. Inicialize o Git
+git init
+
+# 4. Crie seus arquivos (exemplo)
+# Você pode criar manualmente ou via PowerShell
+New-Item index.html
+
+# 5. Adicione os arquivos
+git add .
+
+# 6. Faça o primeiro commit
+git commit -m "Primeiro commit"
+
+# 7. Crie um repositório no GitHub (via navegador) chamado "NovaPasta"
+
+# 8. Conecte ao GitHub e envie
+git remote add origin https://github.com/leonpet/NovaPasta.git
+git branch -M main
+git push -u origin main
