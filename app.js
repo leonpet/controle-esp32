@@ -5,6 +5,8 @@ const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 // Função para buscar dados do Supabase
 async function fetchSupabaseData(query) {
     try {
+        console.log('🔍 Buscando:', `${SUPABASE_URL}/rest/v1/${query}`);
+        
         const response = await fetch(`${SUPABASE_URL}/rest/v1/${query}`, {
             headers: {
                 'apikey': SUPABASE_KEY,
@@ -12,14 +14,21 @@ async function fetchSupabaseData(query) {
             }
         });
         
+        console.log('📡 Status:', response.status);
+        
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            const errorText = await response.text();
+            console.error('❌ Erro do servidor:', errorText);
+            throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
         }
         
-        return await response.json();
+        const data = await response.json();
+        console.log('✅ Dados recebidos:', data.length, 'registros');
+        
+        return data;
     } catch (error) {
-        console.error('Erro ao buscar dados:', error);
-        showError('Erro ao conectar com o Supabase. Verifique sua conexão.');
+        console.error('❌ Erro ao buscar dados:', error);
+        showError(`Erro: ${error.message}`);
         return null;
     }
 }
@@ -57,70 +66,90 @@ async function getLastReading() {
 
 // Buscar recordes
 async function getRecords() {
-    const allData = await fetchSupabaseData('clima?order=created_at.desc');
-    
-    if (!allData || allData.length === 0) return null;
-    
-    let tempMax = { value: -Infinity, date: null };
-    let tempMin = { value: Infinity, date: null };
-    let humMax = { value: -Infinity, date: null };
-    let humMin = { value: Infinity, date: null };
-    let pressMax = { value: -Infinity, date: null };
-    let pressMin = { value: Infinity, date: null };
-    
-    allData.forEach(reading => {
-        // Temperatura
-        if (reading.temperatura > tempMax.value) {
-            tempMax = { value: reading.temperatura, date: reading.created_at };
-        }
-        if (reading.temperatura < tempMin.value) {
-            tempMin = { value: reading.temperatura, date: reading.created_at };
+    try {
+        const allData = await fetchSupabaseData('clima?order=created_at.desc');
+        
+        if (!allData || allData.length === 0) {
+            console.warn('⚠️ Nenhum dado encontrado para recordes');
+            return null;
         }
         
-        // Umidade
-        if (reading.umidade > humMax.value) {
-            humMax = { value: reading.umidade, date: reading.created_at };
-        }
-        if (reading.umidade < humMin.value) {
-            humMin = { value: reading.umidade, date: reading.created_at };
-        }
+        let tempMax = { value: -Infinity, date: null };
+        let tempMin = { value: Infinity, date: null };
+        let humMax = { value: -Infinity, date: null };
+        let humMin = { value: Infinity, date: null };
+        let pressMax = { value: -Infinity, date: null };
+        let pressMin = { value: Infinity, date: null };
         
-        // Pressão
-        if (reading.pressao > pressMax.value) {
-            pressMax = { value: reading.pressao, date: reading.created_at };
-        }
-        if (reading.pressao < pressMin.value) {
-            pressMin = { value: reading.pressao, date: reading.created_at };
-        }
-    });
-    
-    return {
-        temperatura: { max: tempMax, min: tempMin },
-        umidade: { max: humMax, min: humMin },
-        pressao: { max: pressMax, min: pressMin }
-    };
+        allData.forEach(reading => {
+            // Verificar se os valores existem
+            if (reading.temperatura != null) {
+                if (reading.temperatura > tempMax.value) {
+                    tempMax = { value: reading.temperatura, date: reading.created_at };
+                }
+                if (reading.temperatura < tempMin.value) {
+                    tempMin = { value: reading.temperatura, date: reading.created_at };
+                }
+            }
+            
+            if (reading.umidade != null) {
+                if (reading.umidade > humMax.value) {
+                    humMax = { value: reading.umidade, date: reading.created_at };
+                }
+                if (reading.umidade < humMin.value) {
+                    humMin = { value: reading.umidade, date: reading.created_at };
+                }
+            }
+            
+            if (reading.pressao != null) {
+                if (reading.pressao > pressMax.value) {
+                    pressMax = { value: reading.pressao, date: reading.created_at };
+                }
+                if (reading.pressao < pressMin.value) {
+                    pressMin = { value: reading.pressao, date: reading.created_at };
+                }
+            }
+        });
+        
+        return {
+            temperatura: { max: tempMax, min: tempMin },
+            umidade: { max: humMax, min: humMin },
+            pressao: { max: pressMax, min: pressMin }
+        };
+    } catch (error) {
+        console.error('❌ Erro ao calcular recordes:', error);
+        return null;
+    }
 }
 
 // Calcular médias
 async function getAverages() {
-    const allData = await fetchSupabaseData('clima?order=created_at.desc');
-    
-    if (!allData || allData.length === 0) return null;
-    
-    const sum = allData.reduce((acc, reading) => ({
-        temperatura: acc.temperatura + reading.temperatura,
-        umidade: acc.umidade + reading.umidade,
-        pressao: acc.pressao + reading.pressao
-    }), { temperatura: 0, umidade: 0, pressao: 0 });
-    
-    const count = allData.length;
-    
-    return {
-        temperatura: (sum.temperatura / count).toFixed(1),
-        umidade: (sum.umidade / count).toFixed(1),
-        pressao: (sum.pressao / count).toFixed(1),
-        count: count
-    };
+    try {
+        const allData = await fetchSupabaseData('clima?order=created_at.desc');
+        
+        if (!allData || allData.length === 0) {
+            console.warn('⚠️ Nenhum dado encontrado para médias');
+            return null;
+        }
+        
+        const sum = allData.reduce((acc, reading) => ({
+            temperatura: acc.temperatura + (reading.temperatura || 0),
+            umidade: acc.umidade + (reading.umidade || 0),
+            pressao: acc.pressao + (reading.pressao || 0)
+        }), { temperatura: 0, umidade: 0, pressao: 0 });
+        
+        const count = allData.length;
+        
+        return {
+            temperatura: (sum.temperatura / count).toFixed(1),
+            umidade: (sum.umidade / count).toFixed(1),
+            pressao: (sum.pressao / count).toFixed(1),
+            count: count
+        };
+    } catch (error) {
+        console.error('❌ Erro ao calcular médias:', error);
+        return null;
+    }
 }
 
 // Buscar 10 últimas leituras
@@ -208,15 +237,34 @@ async function loadAllData() {
         document.getElementById('loading').style.display = 'block';
         document.getElementById('content').style.display = 'none';
         
-        // Buscar todos os dados em paralelo
-        const [lastReading, records, averages, recentReadings] = await Promise.all([
-            getLastReading(),
-            getRecords(),
-            getAverages(),
-            getRecentReadings()
-        ]);
+        console.log('📊 Carregando dados gerais...');
+        
+        // Buscar última leitura
+        console.log('1️⃣ Buscando última leitura...');
+        const lastReading = await getLastReading();
+        console.log('Última leitura:', lastReading);
+        
+        if (!lastReading) {
+            throw new Error('Nenhuma leitura encontrada no banco de dados');
+        }
+        
+        // Buscar recordes
+        console.log('2️⃣ Calculando recordes...');
+        const records = await getRecords();
+        console.log('Recordes:', records);
+        
+        // Buscar médias
+        console.log('3️⃣ Calculando médias...');
+        const averages = await getAverages();
+        console.log('Médias:', averages);
+        
+        // Buscar leituras recentes
+        console.log('4️⃣ Buscando leituras recentes...');
+        const recentReadings = await getRecentReadings();
+        console.log('Leituras recentes:', recentReadings);
         
         // Atualizar interface
+        console.log('5️⃣ Atualizando interface...');
         updateLastReading(lastReading);
         updateRecords(records);
         updateAverages(averages);
@@ -227,11 +275,15 @@ async function loadAllData() {
         document.getElementById('loading').style.display = 'none';
         document.getElementById('content').style.display = 'block';
         
+        console.log('✅ Dados carregados com sucesso!');
+        
     } catch (error) {
-        console.error('Erro ao carregar dados:', error);
+        console.error('❌ Erro ao carregar dados:', error);
         document.getElementById('loading').innerHTML = `
             <div class="error-message">
-                ❌ Erro ao carregar dados. Verifique sua conexão com o Supabase.
+                ❌ Erro ao carregar dados: ${error.message}
+                <br><br>
+                <strong>Detalhes técnicos:</strong> ${error.stack || 'Não disponível'}
                 <br><br>
                 <button onclick="location.reload()" class="nav-btn">🔄 Tentar Novamente</button>
             </div>
