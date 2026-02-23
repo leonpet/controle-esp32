@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estação Meteorológica - Todas as Leituras</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+        
+        h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .nav-btn {
+            padding: 12px 30px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .nav-btn:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .nav-btn.active {
+            background: #764ba2;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            background: white;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+        
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .section {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .control-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .control-group label {
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .control-group input,
+        .control-group select {
+            padding: 8px 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+        
+        .filter-btn {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .filter-btn:hover {
+            background: #764ba2;
+        }
+        
+        .stats-bar {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-label {
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        .stat-value {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .all-readings-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .all-readings-table th {
+            background: #667eea;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .all-readings-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .all-readings-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .all-readings-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+        
+        .all-readings-table tr:nth-child(even):hover {
+            background: #e9ecef;
+        }
+        
+        .table-container {
+            max-height: 600px;
+            overflow-y: auto;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .page-btn {
+            padding: 8px 15px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .page-btn:hover:not(:disabled) {
+            background: #764ba2;
+        }
+        
+        .page-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .page-info {
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8em;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .control-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .all-readings-table {
+                font-size: 0.85em;
+            }
+            
+            .all-readings-table th,
+            .all-readings-table td {
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌤️ Estação Meteorológica ESP32</h1>
+            <div class="nav-buttons">
+                <a href="index.html" class="nav-btn">📊 Dados Gerais</a>
+                <a href="todas-leituras.html" class="nav-btn active">📋 Todas as Leituras</a>
+            </div>
+        </header>
+
+        <div id="loading" class="loading">
+            <div class="loading-spinner"></div>
+            <p>Carregando todas as leituras do Supabase...</p>
+        </div>
+
+        <div id="content" style="display: none;">
+            <div class="section">
+                <h2 style="color: #667eea; margin-bottom: 20px;">📋 Histórico Completo de Leituras</h2>
+                
+                <!-- Filtros -->
+                <div class="controls">
+                    <div class="control-group">
+                        <label>📅 Data Inicial:</label>
+                        <input type="date" id="startDate">
+                    </div>
+                    <div class="control-group">
+                        <label>📅 Data Final:</label>
+                        <input type="date" id="endDate">
+                    </div>
+                    <div class="control-group">
+                        <label>🔢 Itens por página:</label>
+                        <select id="itemsPerPage">
+                            <option value="50">50</option>
+                            <option value="100" selected>100</option>
+                            <option value="200">200</option>
+                            <option value="500">500</option>
+                            <option value="all">Todas</option>
+                        </select>
+                    </div>
+                    <button class="filter-btn" onclick="applyFilters()">🔍 Filtrar</button>
+                    <button class="filter-btn" onclick="clearFilters()">🔄 Limpar</button>
+                </div>
+
+                <!-- Estatísticas -->
+                <div class="stats-bar">
+                    <div class="stat-item">
+                        <div class="stat-label">Total de Leituras</div>
+                        <div class="stat-value" id="totalCount">--</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Período</div>
+                        <div class="stat-value" id="period">--</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Exibindo</div>
+                        <div class="stat-value" id="showing">--</div>
+                    </div>
+                </div>
+
+                <!-- Tabela -->
+                <div class="table-container">
+                    <table class="all-readings-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>📅 Data e Hora</th>
+                                <th>🌡️ Temperatura (°C)</th>
+                                <th>💧 Umidade (%)</th>
+                                <th>📊 Pressão (hPa)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="allReadingsTable">
+                            <tr>
+                                <td colspan="5" style="text-align: center;">Carregando...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Paginação -->
+                <div class="pagination" id="pagination" style="display: none;">
+                    <button class="page-btn" id="firstPage" onclick="goToPage(1)">⏮️ Primeira</button>
+                    <button class="page-btn" id="prevPage" onclick="changePage(-1)">◀️ Anterior</button>
+                    <span class="page-info" id="pageInfo">Página 1 de 1</span>
+                    <button class="page-btn" id="nextPage" onclick="changePage(1)">Próxima ▶️</button>
+                    <button class="page-btn" id="lastPage" onclick="goToLastPage()">Última ⏭️</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="todas-leituras.js"></script>
+</body>
+</html>

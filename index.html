@@ -3,600 +3,460 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Controle ESP32 - Monitor de Temperatura</title>
+    <title>Estação Meteorológica - Dados Gerais</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-
+        
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             padding: 20px;
+            color: #333;
         }
-
+        
         .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
             background: white;
             border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            padding: 40px;
-            max-width: 500px;
-            width: 100%;
-        }
-
-        h1 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 30px;
-            font-size: 2em;
-        }
-
-        .temperature-section {
-            text-align: center;
-            margin-bottom: 30px;
-            padding: 25px;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            border-radius: 15px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-
-        .temperature-value {
-            font-size: 4.5em;
-            font-weight: bold;
-            color: #2c3e50;
-            line-height: 1;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .temperature-unit {
-            font-size: 1.5em;
-            color: #34495e;
-            margin-left: 5px;
-        }
-
-        .temperature-status {
-            margin-top: 10px;
-            padding: 8px 20px;
-            border-radius: 25px;
-            font-weight: bold;
-            display: inline-block;
-            font-size: 1.1em;
-        }
-
-        .temperature-status.cold {
-            background: #c9e4ff;
-            color: #0047ab;
-        }
-
-        .temperature-status.normal {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .temperature-status.warm {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .temperature-status.hot {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
-        .stats-container {
-            display: flex;
-            justify-content: space-around;
-            margin-top: 20px;
-            padding-top: 15px;
-            border-top: 2px solid rgba(255,255,255,0.5);
-        }
-
-        .stat-item {
-            text-align: center;
-            flex: 1;
-        }
-
-        .stat-label {
-            font-size: 0.85em;
-            color: #2c3e50;
-            opacity: 0.8;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .stat-value {
-            font-size: 1.4em;
-            font-weight: bold;
-            color: #2c3e50;
-            margin-top: 5px;
-        }
-
-        .stat-value.min {
-            color: #3498db;
-        }
-
-        .stat-value.max {
-            color: #e74c3c;
-        }
-
-        .led-section {
-            background: #f8f9fa;
-            border-radius: 15px;
             padding: 30px;
-            margin: 20px 0;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             text-align: center;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         }
-
-        .led-indicator {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            margin: 0 auto 20px;
-            transition: all 0.3s ease;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
-        }
-
-        .led-indicator.on {
-            background: #ffd700;
-            box-shadow: 0 0 40px #ffd700, 0 0 80px #ffd700;
-        }
-
-        .led-indicator.off {
-            background: #6c757d;
-            box-shadow: 0 0 10px rgba(0,0,0,0.2);
-        }
-
-        .led-status-text {
-            font-size: 1.5em;
-            font-weight: bold;
+        
+        h1 {
+            color: #667eea;
+            font-size: 2.5em;
             margin-bottom: 10px;
         }
-
-        .led-status-text.on {
-            color: #ffc107;
+        
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
         }
-
-        .led-status-text.off {
-            color: #6c757d;
-        }
-
-        .control-button {
-            width: 100%;
-            padding: 20px;
-            font-size: 1.2em;
-            font-weight: bold;
+        
+        .nav-btn {
+            padding: 12px 30px;
+            background: #667eea;
+            color: white;
             border: none;
             border-radius: 10px;
+            font-size: 1em;
             cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
         }
-
-        .control-button.turn-on {
-            background: #28a745;
-            color: white;
-        }
-
-        .control-button.turn-on:hover {
-            background: #218838;
+        
+        .nav-btn:hover {
+            background: #764ba2;
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
         }
-
-        .control-button.turn-off {
-            background: #dc3545;
-            color: white;
+        
+        .nav-btn.active {
+            background: #764ba2;
         }
-
-        .control-button.turn-off:hover {
-            background: #c82333;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4);
-        }
-
-        .control-button:active {
-            transform: translateY(0);
-        }
-
-        .control-button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-
-        .info-panel {
-            margin-top: 20px;
-            padding: 15px;
-            background: #e9ecef;
-            border-radius: 10px;
+        
+        .refresh-info {
+            color: #666;
             font-size: 0.9em;
+            margin-top: 10px;
         }
-
-        .info-row {
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            background: white;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+        
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .section {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .section-title {
+            color: #667eea;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        .current-data {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .data-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+        }
+        
+        .data-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+        
+        .data-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+        
+        .data-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .data-unit {
+            font-size: 1.2em;
+            opacity: 0.8;
+        }
+        
+        .data-time {
+            font-size: 0.85em;
+            opacity: 0.8;
+            margin-top: 10px;
+        }
+        
+        .records-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .record-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            border-left: 5px solid #667eea;
+        }
+        
+        .record-title {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        
+        .record-item {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 8px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid #dee2e6;
+            align-items: center;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 10px;
         }
-
-        .info-row:last-child {
-            border-bottom: none;
-            margin-bottom: 0;
-            padding-bottom: 0;
+        
+        .record-type {
+            font-weight: bold;
+            color: #666;
         }
-
-        .info-label {
-            color: #495057;
-            font-weight: 500;
+        
+        .record-max {
+            color: #dc3545;
         }
-
-        .info-value {
-            color: #212529;
+        
+        .record-min {
+            color: #007bff;
+        }
+        
+        .record-value {
+            font-size: 1.3em;
             font-weight: bold;
         }
-
-        .connection-status {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-size: 0.9em;
-            font-weight: bold;
-            color: white;
-            z-index: 1000;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-        }
-
-        .connection-status.connected {
-            background: #28a745;
-        }
-
-        .connection-status.disconnected {
-            background: #dc3545;
-        }
-
-        .connection-status.loading {
-            background: #ffc107;
-        }
-
-        .debug-log {
-            margin-top: 20px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 10px;
-            font-family: 'Courier New', monospace;
+        
+        .record-date {
             font-size: 0.8em;
-            max-height: 150px;
-            overflow-y: auto;
-            white-space: pre-wrap;
-            border: 1px solid #dee2e6;
+            color: #999;
+            margin-top: 3px;
+        }
+        
+        .averages-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .average-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            border: 2px solid #e9ecef;
+        }
+        
+        .average-label {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+        
+        .average-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .recent-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .recent-table th {
+            background: #667eea;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        .recent-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .recent-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .recent-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+        
+        .recent-table tr:nth-child(even):hover {
+            background: #e9ecef;
+        }
+        
+        .error-message {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            color: #856404;
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8em;
+            }
+            
+            .current-data {
+                grid-template-columns: 1fr;
+            }
+            
+            .records-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .recent-table {
+                font-size: 0.9em;
+            }
+            
+            .recent-table th,
+            .recent-table td {
+                padding: 8px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="connection-status loading" id="connectionStatus">Conectando...</div>
-
     <div class="container">
-        <h1>🌡️ Monitor ESP32</h1>
-        
-        <!-- Seção de Temperatura -->
-        <div class="temperature-section">
-            <div class="temperature-value" id="temperature">
-                --
-                <span class="temperature-unit">°C</span>
+        <header>
+            <h1>🌤️ Estação Meteorológica ESP32</h1>
+            <div class="nav-buttons">
+                <a href="index.html" class="nav-btn active">📊 Dados Gerais</a>
+                <a href="todas-leituras.html" class="nav-btn">📋 Todas as Leituras</a>
             </div>
-            
-            <div class="temperature-status" id="temperatureStatus">Aguardando...</div>
-            
-            <div class="stats-container">
-                <div class="stat-item">
-                    <div class="stat-label">Mínima</div>
-                    <div class="stat-value min" id="minTemp">--</div>
+            <div class="refresh-info">
+                ⏱️ Atualização automática a cada 30 segundos | 
+                <span id="lastUpdate">Carregando...</span>
+            </div>
+        </header>
+
+        <div id="loading" class="loading">
+            <div class="loading-spinner"></div>
+            <p>Carregando dados do Supabase...</p>
+        </div>
+
+        <div id="content" style="display: none;">
+            <!-- ÚLTIMA LEITURA -->
+            <div class="section">
+                <h2 class="section-title">📍 Última Leitura</h2>
+                <div class="current-data">
+                    <div class="data-card">
+                        <div class="data-label">🌡️ TEMPERATURA</div>
+                        <div class="data-value" id="currentTemp">--</div>
+                        <div class="data-unit">°C</div>
+                        <div class="data-time" id="currentTempTime">--</div>
+                    </div>
+                    <div class="data-card">
+                        <div class="data-label">💧 UMIDADE</div>
+                        <div class="data-value" id="currentHum">--</div>
+                        <div class="data-unit">%</div>
+                        <div class="data-time" id="currentHumTime">--</div>
+                    </div>
+                    <div class="data-card">
+                        <div class="data-label">📊 PRESSÃO</div>
+                        <div class="data-value" id="currentPress">--</div>
+                        <div class="data-unit">hPa</div>
+                        <div class="data-time" id="currentPressTime">--</div>
+                    </div>
                 </div>
-                <div class="stat-item">
-                    <div class="stat-label">Atual</div>
-                    <div class="stat-value" id="currentTempStat">--</div>
+            </div>
+
+            <!-- RECORDES -->
+            <div class="section">
+                <h2 class="section-title">🏆 Recordes (Máximos e Mínimos)</h2>
+                <div class="records-grid">
+                    <div class="record-card">
+                        <div class="record-title">🌡️ Temperatura</div>
+                        <div class="record-item">
+                            <div>
+                                <div class="record-type record-max">🔥 MÁXIMA</div>
+                                <div class="record-date" id="tempMaxDate">--</div>
+                            </div>
+                            <div class="record-value record-max" id="tempMax">--°C</div>
+                        </div>
+                        <div class="record-item">
+                            <div>
+                                <div class="record-type record-min">❄️ MÍNIMA</div>
+                                <div class="record-date" id="tempMinDate">--</div>
+                            </div>
+                            <div class="record-value record-min" id="tempMin">--°C</div>
+                        </div>
+                    </div>
+
+                    <div class="record-card">
+                        <div class="record-title">💧 Umidade</div>
+                        <div class="record-item">
+                            <div>
+                                <div class="record-type record-max">💦 MÁXIMA</div>
+                                <div class="record-date" id="humMaxDate">--</div>
+                            </div>
+                            <div class="record-value record-max" id="humMax">--%</div>
+                        </div>
+                        <div class="record-item">
+                            <div>
+                                <div class="record-type record-min">🏜️ MÍNIMA</div>
+                                <div class="record-date" id="humMinDate">--</div>
+                            </div>
+                            <div class="record-value record-min" id="humMin">--%</div>
+                        </div>
+                    </div>
+
+                    <div class="record-card">
+                        <div class="record-title">📊 Pressão</div>
+                        <div class="record-item">
+                            <div>
+                                <div class="record-type record-max">⬆️ MÁXIMA</div>
+                                <div class="record-date" id="pressMaxDate">--</div>
+                            </div>
+                            <div class="record-value record-max" id="pressMax">--hPa</div>
+                        </div>
+                        <div class="record-item">
+                            <div>
+                                <div class="record-type record-min">⬇️ MÍNIMA</div>
+                                <div class="record-date" id="pressMinDate">--</div>
+                            </div>
+                            <div class="record-value record-min" id="pressMin">--hPa</div>
+                        </div>
+                    </div>
                 </div>
-                <div class="stat-item">
-                    <div class="stat-label">Máxima</div>
-                    <div class="stat-value max" id="maxTemp">--</div>
+            </div>
+
+            <!-- MÉDIAS -->
+            <div class="section">
+                <h2 class="section-title">📈 Médias de Todas as Leituras</h2>
+                <div class="averages-grid">
+                    <div class="average-card">
+                        <div class="average-label">🌡️ Temperatura Média</div>
+                        <div class="average-value" id="avgTemp">--°C</div>
+                    </div>
+                    <div class="average-card">
+                        <div class="average-label">💧 Umidade Média</div>
+                        <div class="average-value" id="avgHum">--%</div>
+                    </div>
+                    <div class="average-card">
+                        <div class="average-label">📊 Pressão Média</div>
+                        <div class="average-value" id="avgPress">--hPa</div>
+                    </div>
+                    <div class="average-card">
+                        <div class="average-label">📊 Total de Leituras</div>
+                        <div class="average-value" id="totalReadings">--</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 10 ÚLTIMAS LEITURAS -->
+            <div class="section">
+                <h2 class="section-title">🕐 10 Últimas Leituras</h2>
+                <div style="overflow-x: auto;">
+                    <table class="recent-table">
+                        <thead>
+                            <tr>
+                                <th>📅 Data e Hora</th>
+                                <th>🌡️ Temperatura</th>
+                                <th>💧 Umidade</th>
+                                <th>📊 Pressão</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentReadings">
+                            <tr>
+                                <td colspan="4" style="text-align: center;">Carregando...</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
-
-        <!-- Seção do LED -->
-        <div class="led-section">
-            <div class="led-indicator off" id="ledIndicator"></div>
-            <div class="led-status-text off" id="ledStatusText">Carregando...</div>
-
-            <button class="control-button" id="toggleButton" onclick="toggleLED()" disabled>
-                Carregando...
-            </button>
-        </div>
-
-        <!-- Painel de Informações -->
-        <div class="info-panel">
-            <div class="info-row">
-                <span class="info-label">🔄 Atualização:</span>
-                <span class="info-value">a cada 2 segundos</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">🕐 Última leitura:</span>
-                <span class="info-value" id="lastUpdate">--</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">📊 Registros no banco:</span>
-                <span class="info-value" id="recordCount">--</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">📋 Último ID:</span>
-                <span class="info-value" id="lastId">--</span>
-            </div>
-        </div>
-
-        <!-- Log de depuração -->
-        <div class="debug-log" id="debugLog">Iniciando monitor...\n</div>
     </div>
 
-    <script>
-        // Configuração do Supabase
-        const SUPABASE_URL = 'https://rtabltoadyxlzsrqnxhb.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0YWJsdG9hZHl4bHpzcnFueGhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA5OTQ2MjQsImV4cCI6MjA4NjU3MDYyNH0.5fvPaDpq9k6tEfu6ix81Y8nDtR35CUxbAG6OUc-8la8';
-
-        // Estado global
-        let currentLedState = false;
-        let currentTemperature = null;
-        let minTemperature = Infinity;
-        let maxTemperature = -Infinity;
-        let temperatureReadings = []; // Array para armazenar leituras válidas
-
-        // Elementos DOM
-        const elements = {
-            ledIndicator: document.getElementById('ledIndicator'),
-            ledStatusText: document.getElementById('ledStatusText'),
-            toggleButton: document.getElementById('toggleButton'),
-            lastUpdate: document.getElementById('lastUpdate'),
-            connectionStatus: document.getElementById('connectionStatus'),
-            debugLog: document.getElementById('debugLog'),
-            temperature: document.getElementById('temperature'),
-            temperatureStatus: document.getElementById('temperatureStatus'),
-            minTemp: document.getElementById('minTemp'),
-            maxTemp: document.getElementById('maxTemp'),
-            currentTempStat: document.getElementById('currentTempStat'),
-            recordCount: document.getElementById('recordCount'),
-            lastId: document.getElementById('lastId')
-        };
-
-        // Função de log
-        function addLog(message) {
-            const time = new Date().toLocaleTimeString('pt-BR');
-            elements.debugLog.textContent += `[${time}] ${message}\n`;
-            elements.debugLog.scrollTop = elements.debugLog.scrollHeight;
-            console.log(`[LOG] ${message}`);
-        }
-
-        // Função para determinar status da temperatura
-        function getTemperatureStatus(temp) {
-            if (temp === null || isNaN(temp)) return { text: '⏳ Aguardando...', class: '' };
-            if (temp < 18) return { text: '❄️ Frio', class: 'cold' };
-            if (temp < 26) return { text: '🌱 Agradável', class: 'normal' };
-            if (temp < 35) return { text: '☀️ Quente', class: 'warm' };
-            return { text: '🔥 Muito Quente', class: 'hot' };
-        }
-
-        // Função para validar temperatura (ignorar 0 e valores inválidos)
-        function isValidTemperature(temp) {
-            // Ignora null, undefined, 0, e valores fora da faixa plausível (-10 a 60°C)
-            return temp !== null && 
-                   temp !== undefined && 
-                   !isNaN(temp) && 
-                   temp > -10 && 
-                   temp < 60 && 
-                   Math.abs(temp) > 0.1; // Ignora valores muito próximos de 0
-        }
-
-        // Atualizar UI com temperatura
-        function updateTemperatureUI() {
-            if (currentTemperature !== null && isValidTemperature(currentTemperature)) {
-                // Atualiza valor da temperatura
-                elements.temperature.innerHTML = `${currentTemperature.toFixed(1)}<span class="temperature-unit">°C</span>`;
-                elements.currentTempStat.textContent = `${currentTemperature.toFixed(1)}°C`;
-                
-                // Atualiza status
-                const status = getTemperatureStatus(currentTemperature);
-                elements.temperatureStatus.textContent = status.text;
-                elements.temperatureStatus.className = `temperature-status ${status.class}`;
-                
-                // Atualiza estatísticas (só com valores válidos)
-                if (currentTemperature < minTemperature) {
-                    minTemperature = currentTemperature;
-                }
-                if (currentTemperature > maxTemperature) {
-                    maxTemperature = currentTemperature;
-                }
-                
-                // Mostra estatísticas
-                elements.minTemp.textContent = minTemperature !== Infinity ? `${minTemperature.toFixed(1)}°C` : '--';
-                elements.maxTemp.textContent = maxTemperature !== -Infinity ? `${maxTemperature.toFixed(1)}°C` : '--';
-            } else {
-                // Se não tem temperatura válida, mostra placeholder
-                elements.temperature.innerHTML = `--<span class="temperature-unit">°C</span>`;
-                elements.currentTempStat.textContent = '--';
-                elements.temperatureStatus.textContent = 'Aguardando leitura válida...';
-                elements.temperatureStatus.className = 'temperature-status';
-            }
-        }
-
-        // Atualizar UI do LED
-        function updateLEDUI(ledState) {
-            addLog(`LED: ${ledState ? 'LIGADO' : 'DESLIGADO'}`);
-            currentLedState = ledState;
-            elements.toggleButton.disabled = false;
-
-            if (ledState) {
-                elements.ledIndicator.className = 'led-indicator on';
-                elements.ledStatusText.className = 'led-status-text on';
-                elements.ledStatusText.textContent = 'LED LIGADO';
-                elements.toggleButton.className = 'control-button turn-off';
-                elements.toggleButton.textContent = '🔴 Desligar LED';
-            } else {
-                elements.ledIndicator.className = 'led-indicator off';
-                elements.ledStatusText.className = 'led-status-text off';
-                elements.ledStatusText.textContent = 'LED DESLIGADO';
-                elements.toggleButton.className = 'control-button turn-on';
-                elements.toggleButton.textContent = '🟢 Ligar LED';
-            }
-        }
-
-        // Buscar últimos dados do Supabase
-        async function fetchSensorData() {
-            addLog('Buscando dados...');
-
-            try {
-                // Busca os últimos 50 registros para ter um histórico bom
-                const response = await fetch(
-                    `${SUPABASE_URL}/rest/v1/sensor_data?select=*&order=id.desc&limit=50`,
-                    {
-                        headers: {
-                            'apikey': SUPABASE_KEY,
-                            'Authorization': `Bearer ${SUPABASE_KEY}`
-                        }
-                    }
-                );
-
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
-                }
-
-                const data = await response.json();
-                addLog(`Recebidos ${data.length} registros`);
-
-                if (data && data.length > 0) {
-                    // Primeiro, encontra a temperatura válida mais recente
-                    let latestValidTemp = null;
-                    let latestLedState = data[0].led_state; // Pega o LED do último registro
-                    
-                    // Procura pela temperatura válida mais recente
-                    for (let record of data) {
-                        if (isValidTemperature(record.temperature)) {
-                            latestValidTemp = record.temperature;
-                            break;
-                        }
-                    }
-                    
-                    // Se encontrou temperatura válida, atualiza
-                    if (latestValidTemp !== null) {
-                        currentTemperature = latestValidTemp;
-                        addLog(`Temperatura válida encontrada: ${currentTemperature.toFixed(1)}°C`);
-                    } else {
-                        addLog('⚠ Nenhuma temperatura válida nos últimos registros');
-                    }
-                    
-                    // Atualiza LED
-                    updateLEDUI(latestLedState);
-                    
-                    // Calcula estatísticas apenas com temperaturas válidas
-                    const validTemps = data
-                        .map(d => d.temperature)
-                        .filter(isValidTemperature);
-                    
-                    if (validTemps.length > 0) {
-                        minTemperature = Math.min(...validTemps);
-                        maxTemperature = Math.max(...validTemps);
-                        addLog(`Estatísticas: Mín ${minTemperature.toFixed(1)}°C, Máx ${maxTemperature.toFixed(1)}°C (${validTemps.length} leituras válidas)`);
-                    }
-                    
-                    // Atualiza contadores
-                    elements.recordCount.textContent = data.length;
-                    elements.lastId.textContent = data[0].id;
-                    
-                    // Atualiza status da conexão
-                    elements.connectionStatus.className = 'connection-status connected';
-                    elements.connectionStatus.textContent = '✓ Conectado';
-                    
-                } else {
-                    addLog('⚠ Nenhum dado encontrado');
-                    elements.connectionStatus.className = 'connection-status disconnected';
-                    elements.connectionStatus.textContent = '⚠ Sem dados';
-                }
-
-                // Atualiza UI da temperatura
-                updateTemperatureUI();
-                
-                elements.lastUpdate.textContent = new Date().toLocaleTimeString('pt-BR');
-
-            } catch (error) {
-                addLog(`❌ ERRO: ${error.message}`);
-                elements.connectionStatus.className = 'connection-status disconnected';
-                elements.connectionStatus.textContent = '❌ Erro';
-            }
-        }
-
-        // Enviar comando para o LED (sem enviar temperatura)
-        async function toggleLED() {
-            const newState = !currentLedState;
-            addLog(`Enviando comando: ${newState ? 'LIGAR' : 'DESLIGAR'} LED`);
-
-            try {
-                // IMPORTANTE: Não enviamos temperatura aqui!
-                const response = await fetch(
-                    `${SUPABASE_URL}/rest/v1/sensor_data`,
-                    {
-                        method: 'POST',
-                        headers: {
-                            'apikey': SUPABASE_KEY,
-                            'Authorization': `Bearer ${SUPABASE_KEY}`,
-                            'Content-Type': 'application/json',
-                            'Prefer': 'return=minimal'
-                        },
-                        body: JSON.stringify({
-                            // Não incluímos temperature - deixa o ESP32 enviar
-                            led_state: newState,
-                            button_state: true
-                            // temperature NÃO é enviado para não poluir os dados
-                        })
-                    }
-                );
-
-                if (response.ok) {
-                    addLog('✓ Comando enviado com sucesso!');
-                    updateLEDUI(newState);
-                    
-                    // Aguarda um pouco e busca os dados atualizados
-                    setTimeout(fetchSensorData, 500);
-                } else {
-                    addLog(`❌ Falha ao enviar comando: ${response.status}`);
-                }
-
-            } catch (error) {
-                addLog(`❌ ERRO ao enviar: ${error.message}`);
-            }
-        }
-
-        // Inicialização
-        async function init() {
-            addLog('🚀 Iniciando monitor de temperatura...');
-            
-            // Busca dados iniciais
-            await fetchSensorData();
-            
-            // Configura atualização periódica
-            setInterval(fetchSensorData, 2000);
-            
-            addLog('✅ Sistema pronto - atualizando a cada 2 segundos');
-        }
-
-        // Iniciar quando a página carregar
-        window.addEventListener('load', init);
-    </script>
+    <script src="app.js"></script>
 </body>
 </html>
