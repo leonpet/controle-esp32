@@ -33,23 +33,21 @@ async function fetchSupabaseData(query) {
     }
 }
 
-// Formatar data para horário de Brasília (UTC-3)
+// Formatar data para horário de São Paulo (UTC-3)
 function formatDate(dateString) {
     const date = new Date(dateString);
     
-    // Converter para horário de Brasília (UTC-3)
-    const brasiliaOffset = -3 * 60; // -3 horas em minutos
-    const localOffset = date.getTimezoneOffset(); // offset do navegador
-    const diffOffset = brasiliaOffset - localOffset;
+    // O Supabase grava em UTC (+00)
+    // Precisamos converter para UTC-3 (São Paulo)
+    // Subtrair 3 horas (3 * 60 * 60 * 1000 ms)
+    const saoPauloDate = new Date(date.getTime() - (3 * 60 * 60 * 1000));
     
-    const brasiliaDate = new Date(date.getTime() + diffOffset * 60 * 1000);
-    
-    const day = String(brasiliaDate.getDate()).padStart(2, '0');
-    const month = String(brasiliaDate.getMonth() + 1).padStart(2, '0');
-    const year = brasiliaDate.getFullYear();
-    const hours = String(brasiliaDate.getHours()).padStart(2, '0');
-    const minutes = String(brasiliaDate.getMinutes()).padStart(2, '0');
-    const seconds = String(brasiliaDate.getSeconds()).padStart(2, '0');
+    const day = String(saoPauloDate.getUTCDate()).padStart(2, '0');
+    const month = String(saoPauloDate.getUTCMonth() + 1).padStart(2, '0');
+    const year = saoPauloDate.getUTCFullYear();
+    const hours = String(saoPauloDate.getUTCHours()).padStart(2, '0');
+    const minutes = String(saoPauloDate.getUTCMinutes()).padStart(2, '0');
+    const seconds = String(saoPauloDate.getUTCSeconds()).padStart(2, '0');
     
     return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
 }
