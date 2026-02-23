@@ -29,25 +29,41 @@ async function fetchSupabaseData(query) {
     }
 }
 
-// Formatar data
+// Formatar data para horário de Brasília (UTC-3)
 function formatDate(dateString) {
     const date = new Date(dateString);
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    const seconds = String(date.getSeconds()).padStart(2, '0');
+    
+    // Converter para horário de Brasília (UTC-3)
+    const brasiliaOffset = -3 * 60; // -3 horas em minutos
+    const localOffset = date.getTimezoneOffset(); // offset do navegador
+    const diffOffset = brasiliaOffset - localOffset;
+    
+    const brasiliaDate = new Date(date.getTime() + diffOffset * 60 * 1000);
+    
+    const day = String(brasiliaDate.getDate()).padStart(2, '0');
+    const month = String(brasiliaDate.getMonth() + 1).padStart(2, '0');
+    const year = brasiliaDate.getFullYear();
+    const hours = String(brasiliaDate.getHours()).padStart(2, '0');
+    const minutes = String(brasiliaDate.getMinutes()).padStart(2, '0');
+    const seconds = String(brasiliaDate.getSeconds()).padStart(2, '0');
     
     return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
 }
 
-// Formatar data curta (apenas data)
+// Formatar data curta (apenas data) para horário de Brasília
 function formatDateShort(dateString) {
     const date = new Date(dateString);
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
+    
+    // Converter para horário de Brasília (UTC-3)
+    const brasiliaOffset = -3 * 60;
+    const localOffset = date.getTimezoneOffset();
+    const diffOffset = brasiliaOffset - localOffset;
+    
+    const brasiliaDate = new Date(date.getTime() + diffOffset * 60 * 1000);
+    
+    const day = String(brasiliaDate.getDate()).padStart(2, '0');
+    const month = String(brasiliaDate.getMonth() + 1).padStart(2, '0');
+    const year = brasiliaDate.getFullYear();
     
     return `${day}/${month}/${year}`;
 }
